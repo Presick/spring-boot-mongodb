@@ -31,3 +31,13 @@ We have been tasked by a company called Landmark Technology to build a CI CD ( C
 + The artefact is successively built( Maven), analyzed for quality ( SonarQube) then a copy of the .war file is stored in Nexus. Next the artefact is containerize and a copy is pushed to DockerHub where it is pulled and deployed in the Kubernetes cluster previously built AWS using KOPS.
 ![image](https://github.com/user-attachments/assets/5d285731-584c-4d65-95f1-138528bd9b26)
 
+##### step 1 create the project on Jenkins dashboard
+
+On Jenkins dashboard: + NewItem - Name the project ( spring-java-app-mongo) - Select Freestyle Project - click OK
+![image](https://github.com/user-attachments/assets/8e363deb-1f3d-496e-b98e-ab07f1b328e4)
+
+##### step 2 Jenkins - Git integration + Webhook configuration
+
+From the project dashboard in Jenkins go to Configuration - Source Code Management
+
+
