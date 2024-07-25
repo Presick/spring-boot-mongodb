@@ -38,6 +38,81 @@ On Jenkins dashboard: + NewItem - Name the project ( spring-java-app-mongo) - Se
 
 ##### step 2 Jenkins - Git integration + Webhook configuration
 
-From the project dashboard in Jenkins go to Configuration - Source Code Management
+From the project dashboard in Jenkins go to Configuration - Build Trigger
+![image](https://github.com/user-attachments/assets/71ad5fbe-9bc0-47e2-89eb-8344f8cd6a5d)
+
+Go to the project repository on Github - Settings - Webhook
+
+![image](https://github.com/user-attachments/assets/6855a9fe-2c98-4590-a436-24c0de13b076)
+
+##### step 3 Jenkins - maven, SonarQube and Nexus configuration
+
+From the project configuration page
+![image](https://github.com/user-attachments/assets/7ab9e2ae-fcc3-4dc1-b3a6-9fa0a10c04cb)
+
+##### step 4 Jenkins - Pipeline configuration
+
+node
+{
+    
+ stage('SCM Clone'){
+     git 'https://github.com/Presick/spring-boot-docker'
+  }   
+    
+  stage('maven build'){
+      def mavenHome = tool name: 'maven3.6.3'
+      def mavenCMD = "${mavenHome}/bin/mvn "
+    sh "${mavenCMD} clean package"
+    
+  }  
+    
+ stage('QualityRreport'){
+     sh '${mavenHome}/bin/mvn sonar:sonar'
+  }
+  
+  stage('NexusUpload'){
+     sh '${mavenHome}/bin/mvn deploy'
+  }
+  
+  stage('BuildDockerImage'){
+      
+     sh "docker build -t ckeumo/spring-boot-mongo ."
+  }
+  
+  
+  stage('PushDockerImageToDockerhub'){
+      
+      withCredentials([string(credentialsId: 'hash', variable: 'hash')]) {
+    sh "docker login registry-1.docker.io -u ckeumo -p ${hash} "
+}
+    
+    sh "docker push ckeumo/spring-boot-mongo" 
+       
+  }
+  
+  stage('RemoveDockerImages'){
+      
+     sh "docker rmi ${docker images -q}"
+  }
+  
+  stage('DeployAppIn K8S'){
+      
+     sh "kubectl apply -f springapp.yml"
+  }
+  
+  
+  
+}
 
 
+##### Deployment
+
+![image](https://github.com/user-attachments/assets/dfdf12df-fd91-4eb1-b5b1-1a278c6ffc67) 
+![image](https://github.com/user-attachments/assets/23c570f2-df50-4e34-ae03-354f54b94db3)
+![image](https://github.com/user-attachments/assets/d26f3274-1508-4481-a56e-a718badddb64)
+![image](https://github.com/user-attachments/assets/8dac0234-ade9-4749-bace-753c1ced1442)
+
+
+## REFERENCE LINK
+Project Github repository
+https://github.com/Presick/spring-boot-docker
