@@ -23,3 +23,10 @@ We have been tasked by a company called Landmark Technology to build a CI CD ( C
 + 2 Auto scaling groups
 
 ![image](https://github.com/user-attachments/assets/39e3d776-4654-47f5-bb2b-bee2957eee81)
+
+##### WORFLOW
+
+##### description
++ Once the developer commit the code and once this one is merged to the main branch, a build is triggered on Jenkins via webhook
++ The artefact is successively built( Maven), analyzed for quality ( SonarQube) then a copy of the .war file is stored in Nexus. Next the artefact is containerize and a copy is pushed to DockerHub where it is pulled and deployed in the Kubernetes cluster previously built AWS using KOPS.
+
