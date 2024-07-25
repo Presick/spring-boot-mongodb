@@ -1,0 +1,88 @@
+#1- Check compatibility
+
+#Benchmark:
+#vm.max_map_count is greater than or equal to 524288
+#fs.file-max is greater than or equal to 131072
+#the user running SonarQube can open at least 131072 file descriptors
+#the user running SonarQube can open at least 8192 threads
+
+#Verification commands:
+#sysctl vm.max_map_count
+#sysctl fs.file-max
+#ulimit -n
+#ulimit -u
+
+#If one of those parameters is under de benchmark value, run:
+#sudo sysctl -w vm.max_map_count=524288
+#sudo sysctl -w fs.file-max=131072
+#sudo ulimit -n 131072
+#sudo ulimit -u 8192
+
+# 2- update the server
+sudo dnf update -y
+
+## Troubleshooting##
+# If you run into an issue with the rpm DB run the commands:
+# - to backup your current rpm DB:
+# mkdir /backups/
+# tar -zcvf /backups/rpmdb-$(date +"%d%m%Y").tar.gz  /var/lib/rpm
+#To rebuild the rpm DB
+# rpm -vv --rebuilddb  ( -vv option allows for displaying lots of debugging information.)
+
+# 3- As a good security practice, SonarQuber Server is not advised to run sonar service as a root user, 
+#so create a new user called sonar and grant sudo access to manage sonar services as follows
+# a. create a sonar 
+sudo useradd sonar
+# b. Grand sudo access to sonar user
+sudo echo "sonar ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/sonar
+
+# 4- set hostname for the sonarqube server
+sudo hostnamectl set-hostname sonar 
+
+# 5- Set user sonar password and enable authentification
+sudo su - sonar
+sudo passwd sonar
+sudo sed -i "/^[^#]*PasswordAuthentication[[:space:]]no/c\PasswordAuthentication yes" /etc/ssh/sshd_config
+sudo service sshd restart
+
+# 6- Install java jdk 11
+cd /opt
+sudo yum -y install unzip wget git vim tree -y
+sudo yum install  java-11-openjdk-devel -y
+
+# 7- Download and extract the SonarqQube Server software.
+#sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-7.8.zip
+#sudo unzip sonarqube-7.8.zip
+#sudo rm -rf sonarqube-7.8.zip
+#sudo mv sonarqube-7.8 sonarqube
+
+sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-9.6.1.59531.zip
+sudo unzip sonarqube-9.6.1.59531.zip
+sudo rm -rf sonarqube-9.6.1.59531.zip
+sudo mv sonarqube-9.6.1.59531 sonarqube
+
+
+# 8- Grant file permissions for sonar user to start and manage sonarQube
+sudo chown -R sonar:sonar /opt/sonarqube/
+sudo chmod -R 775 /opt/sonarqube/
+
+# 9- start sonarQube server
+cd /opt/sonarqube/bin/linux-x86-64/
+./sonar.sh start
+
+#sh /opt/sonarqube/bin/linux-x86-64/sonar.sh start 
+# sh /opt/sonarqube/bin/linux-x86-64/sonar.sh status (stop if you want to stop sonarqube)
+
+10- Ensure that SonarQube is running and Access sonarQube on the browser
+curl -v localhost:9000
+http://publicIP:9000  
+
+## Ttroubleshooting ##
+If it does not work, do: 
+sudo vim sonarqube/conf/sonar.properties, at web server,
+remove the "#" sign on sonar.web.host=0.0.0.0 and sonar.web.port=9000
+
+default USERNAME: admin
+default password: admin
+
+***Fin*** 
