@@ -1,0 +1,57 @@
+#4# Install kops
+
+sudo wget https://github.com/kubernetes/kops/releases/download/v1.25.3/kops-linux-amd64
+sudo chmod +x kops-linux-amd64
+sudo mv kops-linux-amd64 /usr/local/bin/kops
+
+#5# Install kubectl
+
+sudo curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+ sudo chmod +x ./kubectl
+ sudo mv ./kubectl /usr/local/bin/kubectl
+
+#6# Create an IAM role called "kops" from AWS Console or CLI with the below Policies with the following privilege
+
+AmazonEC2FullAccess 
+AmazonS3FullAccess
+IAMFullAccess 
+AmazonVPCFullAccess
+
+#7# Attach IAM role to the Jenkins ubuntu server from Console Select Jenkins-U --> Actions --> Instance Settings --> Attach/Replace IAM Role --> Select the IAM role Kops. --> Save.
+
+#8# create an S3 bucket: Execute the commands below in your KOPS control Server (Jenkins-U). use unique s3 bucket name. If you get bucket name exists error.
+
+aws s3 mb s3://mylab-ckkops
+aws s3 ls # to verify
+
+#9# Add env variables in bashrc
+vi .bashrc # Give Unique Name And S3 Bucket which you created.
+
+export NAME=mylab-kops.k8s.local                # kubernetes cluster's name
+export KOPS_STATE_STORE=s3://mylab-ckkops       # kops bucket's name
+
+:wq
+
+source .bashrc # refresh .bashrc file
+
+#10# Create sshkey 
+
+ssh-keygen -t rsa -b 4096
+
+#11# Create k8s cluster
+
+kops create cluster --zones us-east-1b --master-size t2.medium --master-count 1 --node-size t2.medium --node-count=2 --name ${NAME}
+
+#12# copy the sshkey into your cluster to be able to access your kubernetes node from the Jenkins-U
+
+kops create secret --name mylab-kops.k8s.local sshpublickey admin -i ~/.ssh/id_rsa.pub --state s3://mylab-ckkops
+
+#kops create secret --name ${NAME} sshpublickey admin -i ~/.ssh/id_rsa.pub --state ${KOPS_STATE_STORE}
+
+#13# Initialise your kops kubernetes cluster by running the command below
+
+kops update cluster --name ${NAME} --yes
+
+#14# Export the kubeconfig file to manage your kubernetes cluster from a remote server. For this demo, Our remote server shall be our kops server
+
+kops export kubecfg --name $NAME --admin
