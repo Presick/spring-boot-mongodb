@@ -29,4 +29,5 @@ We have been tasked by a company called Landmark Technology to build a CI CD ( C
 ##### description
 + Once the developer commit the code and once this one is merged to the main branch, a build is triggered on Jenkins via webhook
 + The artefact is successively built( Maven), analyzed for quality ( SonarQube) then a copy of the .war file is stored in Nexus. Next the artefact is containerize and a copy is pushed to DockerHub where it is pulled and deployed in the Kubernetes cluster previously built AWS using KOPS.
+![image](https://github.com/user-attachments/assets/5d285731-584c-4d65-95f1-138528bd9b26)
 
